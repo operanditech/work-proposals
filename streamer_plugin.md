@@ -1,6 +1,14 @@
 # Streamer nodeos plugin
 
-This work proposal will explain the details of the project for building a `streamer_plugin` for `nodeos`. Since this project is already being developed, it will describe the work already done, and detail the roadmap for the work ahead, goals, motivations, features, and use cases.
+> Work Proposal Document. Version 1.0-rc1
+
+This work proposal will explain the details of the project for building a `streamer_plugin` for `nodeos`. Since this project is already under development, it will describe the work already done, and detail the roadmap for the work ahead, goals, motivations, features, and use cases.
+
+## About the authors
+
+Mario Silva and Andres Berrios are both software engineers, each with over a decade of experience in designing, building, and scaling software systems and infrastructure for startups and corporations. Together they have started Operandi, a blockchain consultancy firm that aims to contribute as much value as possible to the EOSIO software community through open source projects and initiatives, as well as offering professional consultancy and software development services.
+
+They have already made many contributions to the community, including various open source projects such as eos-sharp, scatter-sharp, the MVP of the Tungsten bond management dapp, various example smart contracts, tools for managing local development testnets and nodeos processes in remote servers, as well as actively helping to educate the community in [eosio.stackexchange.com](https://eosio.stackexchange.com/) and the Telegram channels, giving presentations and workshops at meetup events, and more.
 
 ## Motivation
 
@@ -29,6 +37,12 @@ In order to separate the fixed and variable resource usages, it is necessary to 
 
 The `streamer_plugin` will focus exclusively on tracking relevant blockchain events and their associated data, and streaming them outside of `nodeos` for any receiver to consume and process however they see fit. This would reduce the load on `nodeos` while providing the receiver with the most advanced and comprehensive set of data about the blockchain activity, in real time.
 
+### Communication
+
+To send messages to the receiver process, the plugin will use the widely supported and popular [ZeroMQ library](http://zeromq.org/). It supports multiple different underlying transports, such as TCP or IPC, and it takes care of most of the potential issues when managing communications. It's well supported on almost all languages and platforms, and provides a high-speed asynchronous I/O engine. It sends the messages through the underlying connection using a background thread, which allows it not to take CPU cycles away from the main blockchain processing thread of `nodeos`. It also provides smart communication patterns that allow for completely reliable message passing (no lost messages).
+
+### Utilities
+
 We will also provide a Node.js library with plug-and-play implementations for many useful functionalities to build your receiver process very easily. The initially supported ones will be:
 
 - Storing transaction and action history into MongoDB - an offloaded equivalent to `mongodb_plugin`.
@@ -37,6 +51,8 @@ We will also provide a Node.js library with plug-and-play implementations for ma
 - A generic data store adaptor implementation that will allow you to replace MongoDB for any other data store of your choice (such as Postgres, MySQL, or any other database system).
 - A horizontally scalable WebSocket server to feed real time updates to your dapp frontend.
 - An `ActionReader` for [demux-js](https://github.com/EOSIO/demux-js) that also provides the state DB operations associated to each action.
+
+These utilities will be properly documented and we will provide examples of how to use them.
 
 ## Desired features
 
@@ -75,7 +91,7 @@ We will also provide a Node.js library with plug-and-play implementations for ma
 
 ## Use cases
 
-The Streamer plugin and receiver library will provide the necessary functionality to support these and many more use cases:
+The Streamer plugin and receiver library will provide the necessary functionality to enable these and many more use cases:
 
 - Efficiently querying the full history of the blockchain.
   - Getting the actions associated to an account or contract.
@@ -98,6 +114,10 @@ The Streamer plugin and receiver library will provide the necessary functionalit
   - To show notifications in your dapp.
   - To update any values in your user interface.
   - Make your block explorer efficiently update in real time.
+- Running off-chain or on-chain side-effects for certain monitored actions or state DB conditions.
+  - Sending an email when a user makes a purchase in your dapp.
+  - Sending a blockchain transaction in response to a user action automatically.
+  - Calling an external API when a user accumulates a certain amount of points.
 
 ## Alternatives
 
@@ -112,24 +132,73 @@ The existing alternatives provide only limited functionality, and in hard-to-sca
 
 ## Work
 
+A lot of work has been done so far, and some amount is left to do. We need to ensure that this software will be stable and reliable, and ready to be used in production settings.
+
 ### Previous work
+
+The current status of the development of this plugin (and the provided receiver) is the result of several weeks of work and research, and several iterations on the approach and technology solution, thanks to testing and discussions with dapp developers as well as with Block.one engineers about the needs, philosophy, constraints, goals, and use cases that should be supported.
+
+> **We would like to donate the work done so far to the EOSIO community.** We want to see the amazing things that people will build with these tools.
 
 ### Remaining work
 
-<List the features that still need to be implemented>
-<Detail what the acceptance criteria is for each feature, and the deliverables, including test results, benchmarks, reports, usage code samples, documentation, etc>
+The majority of the remaining work is related to the following points (with estimated hours of work required):
+
+#### Polishing the code and functionalities: 20 hours
+
+The current proof-of-concept version needs to be polished and some functionalities are yet to be implemented, such as:
+
+- Full reliability of the ZeroMQ communication model.
+- Standardization of the message formats and structure.
+- Potentially also grouping undo state DB operations (when there's a fork) per action if we find a valid use case for that.
+
+#### Functional testing and stress testing: 40 hours
+
+To ensure everything is ready for production deployments, we need to test all the functionalities and and make sure to handle edge cases. We will also test a full replay of the EOS main net blockchain and measure the performance both during the replay and after the node starts tracking the live blockchain activity.
+
+#### Optimizing performance: 20 hours
+
+We need to ensure the resource usage is kept to a minimum, and delivery of messages to the receiver is fast and efficient. We will use the results of the stress tests to identify potential bottlenecks in the system and apply the necessary optimizations. After the optimizations are applied, we will measure performance once more and publish the results in a report.
+
+#### Implementing additional features: 40 hours
+
+Once the plugin and receiver are thoroughly tested and the fundamental functionalities are in place, we will implement the additional features in the receiver library. These will include [utilities](#utilities) for covering many of the [example use cases](#use-cases).
+
+#### Documentation: 16 hours
+
+We will provide documentation for each component of the system, as well as code samples to explain their usage.
+
+## Timeline
+
+We expect the remaining of the work to be done in around one month. Frequent updates about the progress will be published so the community can follow the development and testing.
 
 ## Costs
 
-<Details of the costs in terms of development hours and testing infrastructure>
+The cost estimation is based on the lower end of the range for the market rate for this type of development work, which would be 80 USD per hour. At the current market price (1.8 USD), this would be equivalent to around 45 EOS per hour.
+
+The hosting costs for the infrastructure necessary to run the tests is estimated to be 2000 USD, or around 1111 EOS.
+
+The total work estimate is of 136 hours, which translates to 6120 EOS. With infrastructure hosting costs, the total budget would be 7231 EOS.
 
 ## Financing
 
+We would like to offer organizations and members of the community the opportunity to jointly sponsor the development of this suite of functionalities. Please contact us through Telegram by direct message to [@andresberrios](https://t.me/andresberrios) or through email at [hello@operandi.io](mailto:hello@operandi.io) if you would like to help finance this work proposal. Please share this document with any parties that you think would be interested in the described functionalities and would like to provide feedback, suggestions, opinions, or funding.
+
+### Fund management
+
+We are evaluating the following options for managing the sponsorship funds:
+
+- Receiving the sponsorship funds into the company's EOS account (`operanditech`).
+- Setting up a dedicated EOS account controlled by a multi-signature configuration of the set of sponsors.
+- Creating a smart contract (with a web frontend) to allow the community to contribute funds and publish their own work proposals, providing escrow functionality.
+
+Since this is not a big ICO or anything like that, but an open source project for the community with a limited budget, we think that the first option could be enough this time, and that way we can gain insight into the process of managing this kind of sponsorships so we can eventually implement the more ambitious third option.
+
 ### What sponsors can expect
 
-<List the things they can expect, such as some ongoing support and assistance in setting up their usage of the software, crediting of sponsors in various marketing places, etc>
-
-### Sponsorship plan
-
-<Describe the sponsorship proposal>
-<Maybe propose a system in which we need the total sum to be covered by a group of sponsors, and the more sponsors participate, the less each one needs to pay>
+- Prominent credit mentions in all the project's communications.
+- Ongoing support and assistance in setting up their usage of the project's software.
+- Priority in the development of specific features they are interested in.
+- Potentially the addition of the [utilities](#utilities) necessary for a use case they are interested in.
+- Discounts in custom integration services of the software with their dapps or systems, consultations, and infrastructure setup.
+- Please contact us with ideas of what else you would be interested to receive as a sponsor to the project.
